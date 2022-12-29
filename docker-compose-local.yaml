@@ -9,6 +9,8 @@ services:
       - POSTGRES_DB=postgres
     ports:
       - '5432:5432'
+    networks:
+      - custom
 networks:
-  es-net:
+  custom:
     driver: bridge

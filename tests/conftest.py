@@ -17,7 +17,7 @@ SELECT * FROM users WHERE user_id = %s;
 
 
 @pytest.fixture(scope="session", autouse=True)
-def create_database_and_run_migrations():
+def run_migrations():
     """Run migrations for test database"""
     print("Running migrations...")
     os.system(f"yoyo apply --database {DATABASE_URL} ./migrations -b")
@@ -25,7 +25,8 @@ def create_database_and_run_migrations():
 @pytest.fixture(scope="session")
 def test_client():
     """Test client creation"""
-    with TestClient(create_app()) as client:
+    test_app = create_app()
+    with TestClient(test_app) as client:
         yield client
 
 
@@ -42,7 +43,8 @@ def create_test_user_in_db(username: str, db_connection, is_deleted: bool = Fals
     if user_id is None:
         cursor.execute(CREATE_USER_QUERY_COMMON, (username, is_deleted))
     else:
-        cursor.execute(CREATE_USER_QUERY_COMMON, (user_id, username, is_deleted))
+        cursor.execute(CREATE_USER_QUERY, (user_id, username, is_deleted))
+    db_connection.commit()
     return cursor.fetchone()[0]
 
 
