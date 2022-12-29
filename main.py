@@ -9,19 +9,20 @@ env = Env()
 DATABASE_URL = env.str("DATABASE_URL")
 
 
-@app.get(path="/user")
-def create_user():
+@app.post(path="/user/{username}")
+def create_user(username: str):
     database = app.state.db
     cursor = database.cursor()
-    cursor.execute("""INSERT INTO users (username) VALUES (%s);""", ("test_user", ))
+    cursor.execute("""INSERT INTO users (username, is_deleted) VALUES (%s, false) RETURNING user_id;""", (username, ))
     database.commit()
-    return {"msg": "user has been created"}
+    return {"msg": "user has been created",
+            "user_id": cursor.fetchone()[0]}
 
 @app.delete(path="/user/{user_id}")
 def delete_user(user_id: int):
     database = app.state.db
     cursor = database.cursor()
-    cursor.execute("""DELETE FROM users WHERE user_id = %s;""", (user_id, ))
+    cursor.execute("""UPDATE users SET is_deleted = true WHERE user_id = %s;""", (user_id, ))
     database.commit()
     return {"msg": "user has been deleted"}
 
